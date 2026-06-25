@@ -1,17 +1,15 @@
 {
   "name": "@faigle/node-red-contrib-docling",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "We like ducks",
-
   "private": false,
   "license": "MIT",
-
   "node-red": {
     "nodes": {
-      "docling" : "src/docling.js"
+      "docling": "src/docling.js"
     }
   },
   "scripts": {
-      "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/pip install --upgrade pip && ./.venv/bin/pip install pillow>=12.0.0 docling docling-surya easyocr rapidocr-onnxruntime transformers<5.0.0 tesserocr --upgrade"
+    "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/pip install --upgrade pip && ./.venv/bin/pip install pillow>=12.0.0 docling docling-surya easyocr rapidocr-onnxruntime transformers<5.0.0 tesserocr --upgrade"
   }
 }
