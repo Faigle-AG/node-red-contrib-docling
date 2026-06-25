@@ -1,141 +1,166 @@
 <script type="text/javascript">
     RED.nodes.registerType('docling', {
-        category : 'document processing',
-        color    : 'burlywood',
-        defaults : {
-            name                  : { value : "" },
-            dynamic               : { value : false },
-            fromFormat            : { value : "pdf, docx, pptx, html, image, asciidoc, md, csv, xlsx, json_docling" },
-            source                : {
-                value    : "",
-                validate : function(v) {
-                    if ($("#node-input-dynamic").length ? $("#node-input-dynamic").prop("checked") : this.dynamic)
-                        return true;
-                    if (!v || v.trim() === "") return false;
-
-                    var builtInValidator = RED.validators.typedInput("sourceType");
-                    return builtInValidator.call(this, v);
-                }
+        category: 'document processing',
+        color: 'burlywood',
+        defaults: {
+            name: { value: '' },
+            dynamic: { value: false },
+            fromFormat: {
+                value: 'pdf, docx, pptx, html, image, asciidoc, md, csv, xlsx, json_docling',
             },
-            sourceType            : { value : "str" },
-            toFormat              : { value : "md" },
-            output                : { value : "" },
-            outputType            : { value : "str" },
-            imageExportMode       : { value : "embedded" },
+            source: {
+                value: '',
+                validate: function (v) {
+                    if (
+                        $('#node-input-dynamic').length
+                            ? $('#node-input-dynamic').prop('checked')
+                            : this.dynamic
+                    )
+                        return true;
+                    if (!v || v.trim() === '') return false;
 
-            tables                : { value : true },
-            tableMode             : { value : "accurate" },
-            enrichCode            : { value : false },
-            enrichFormula         : { value : false },
-            enrichPictureClasses  : { value : false },
-            enrichChartExtraction : { value : false },
+                    var builtInValidator = RED.validators.typedInput('sourceType');
+                    return builtInValidator.call(this, v);
+                },
+            },
+            sourceType: { value: 'str' },
+            toFormat: { value: 'md' },
+            output: { value: '' },
+            outputType: { value: 'str' },
+            imageExportMode: { value: 'embedded' },
 
-            ocr                   : { value : true },
-            forceOcr              : { value : false },
-            ocrEngine             : { value : "auto" },
-            ocrLang               : { value : "en" },
+            tables: { value: true },
+            tableMode: { value: 'accurate' },
+            enrichCode: { value: false },
+            enrichFormula: { value: false },
+            enrichPictureClasses: { value: false },
+            enrichChartExtraction: { value: false },
 
-            device                : { value : "auto" },
-            pdfBackend            : { value : "docling_parse" },
-            pipeline              : { value : "" },
-            vlmModel              : { value : "granite_docling" },
-            artifactsPath         : { value : "" },
-            documentTimeout       : { value : "" },
-            abortOnError          : { value : false },
-            profiling             : { value : false },
-            saveProfiling         : { value : false }
+            ocr: { value: true },
+            forceOcr: { value: false },
+            ocrEngine: { value: 'auto' },
+            ocrLang: { value: 'en' },
+
+            device: { value: 'auto' },
+            pdfBackend: { value: 'docling_parse' },
+            pipeline: { value: '' },
+            vlmModel: { value: 'granite_docling' },
+            artifactsPath: { value: '' },
+            documentTimeout: { value: '' },
+            abortOnError: { value: false },
+            profiling: { value: false },
+            saveProfiling: { value: false },
         },
-        inputs  : 1,
-        outputs : 1,
-        icon    : "docling.svg",
-        label   : function() {
-            return this.name || (!this.dynamic ? ("docling " + this.source).trim() : "docling");
+        inputs: 1,
+        outputs: 1,
+        icon: 'docling.svg',
+        label: function () {
+            return this.name || (!this.dynamic ? ('docling ' + this.source).trim() : 'docling');
         },
-        oneditprepare: function() {
-            $("#node-input-source").typedInput({
-                default   : 'str',
-                types     : ['msg', 'flow', 'global', 'str', 'jsonata', 'env'],
-                typeField : $("#node-input-sourceType")
+        oneditprepare: function () {
+            $('#node-input-source').typedInput({
+                default: 'str',
+                types: ['msg', 'flow', 'global', 'str', 'jsonata', 'env'],
+                typeField: $('#node-input-sourceType'),
             });
 
-            $("#node-input-output").typedInput({
-                default   : 'str',
-                types     : ['msg', 'flow', 'global', 'str', 'jsonata', 'env'],
-                typeField : $("#node-input-outputType")
+            $('#node-input-output').typedInput({
+                default: 'str',
+                types: ['msg', 'flow', 'global', 'str', 'jsonata', 'env'],
+                typeField: $('#node-input-outputType'),
             });
 
             if (this.fromFormat) {
-                var fromArr = this.fromFormat.split(",").map(function(item) { return item.trim(); });
-                $("#node-input-fromFormat").val(fromArr);
+                var fromArr = this.fromFormat.split(',').map(function (item) {
+                    return item.trim();
+                });
+                $('#node-input-fromFormat').val(fromArr);
             }
             if (this.toFormat) {
-                var toArr = this.toFormat.split(",").map(function(item) { return item.trim(); });
-                $("#node-input-toFormat").val(toArr);
+                var toArr = this.toFormat.split(',').map(function (item) {
+                    return item.trim();
+                });
+                $('#node-input-toFormat').val(toArr);
             }
 
-            $("#node-input-ocr").on("change", function() {
-                if ($(this).prop("checked")) $(".row-ocr-options").show();
-                else $(".row-ocr-options").hide();
+            $('#node-input-ocr').on('change', function () {
+                if ($(this).prop('checked')) $('.row-ocr-options').show();
+                else $('.row-ocr-options').hide();
             });
 
-            $("#node-input-tables").on("change", function() {
-                if ($(this).prop("checked")) $("#row-tableMode").show();
-                else $("#row-tableMode").hide();
+            $('#node-input-tables').on('change', function () {
+                if ($(this).prop('checked')) $('#row-tableMode').show();
+                else $('#row-tableMode').hide();
             });
 
-            $("#node-input-pipeline").on("change", function() {
-                if ($(this).val() === "vlm") $("#row-vlmModel").show();
-                else $("#row-vlmModel").hide();
+            $('#node-input-pipeline').on('change', function () {
+                if ($(this).val() === 'vlm') $('#row-vlmModel').show();
+                else $('#row-vlmModel').hide();
             });
 
-            $("#node-input-profiling").on("change", function() {
-                if ($(this).prop("checked")) $("#row-saveProfiling").show();
-                else $("#row-saveProfiling").hide();
+            $('#node-input-profiling').on('change', function () {
+                if ($(this).prop('checked')) $('#row-saveProfiling').show();
+                else $('#row-saveProfiling').hide();
             });
 
-            $("#node-input-dynamic").on("change", function() {
-                if ($(this).prop("checked")) {
-                    $(".form-row-static").hide();
+            $('#node-input-dynamic').on('change', function () {
+                if ($(this).prop('checked')) {
+                    $('.form-row-static').hide();
                 } else {
-                    $(".form-row-static").show();
-                    $("#node-input-ocr").trigger("change");
-                    $("#node-input-tables").trigger("change");
-                    $("#node-input-pipeline").trigger("change");
-                    $("#node-input-profiling").trigger("change");
+                    $('.form-row-static').show();
+                    $('#node-input-ocr').trigger('change');
+                    $('#node-input-tables').trigger('change');
+                    $('#node-input-pipeline').trigger('change');
+                    $('#node-input-profiling').trigger('change');
                 }
             });
 
-            $("#node-input-dynamic").trigger("change");
+            $('#node-input-dynamic').trigger('change');
         },
-        oneditsave: function() {
-            var fromVals = $("#node-input-fromFormat").val();
-            this.fromFormat = fromVals ? fromVals.join(",") : "";
+        oneditsave: function () {
+            var fromVals = $('#node-input-fromFormat').val();
+            this.fromFormat = fromVals ? fromVals.join(',') : '';
 
-            var toVals = $("#node-input-toFormat").val();
-            this.toFormat = toVals ? toVals.join(",") : "";
-        }
+            var toVals = $('#node-input-toFormat').val();
+            this.toFormat = toVals ? toVals.join(',') : '';
+        },
     });
 </script>
 
-
 <script type="text/html" data-template-name="docling">
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> <span>Name</span></label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i>
+            <span>Name</span>
+        </label>
+        <input type="text" id="node-input-name" placeholder="Name" />
     </div>
 
     <div class="form-row">
         <label for="node-input-dynamic">&nbsp;</label>
-        <input type="checkbox" id="node-input-dynamic" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-dynamic" style="width: 70%;"><i class="fa fa-usb"></i> Load from msg.file</label>
+        <input
+            type="checkbox"
+            id="node-input-dynamic"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-dynamic" style="width: 70%;">
+            <i class="fa fa-usb"></i>
+            Load from msg.file
+        </label>
     </div>
 
     <div class="form-row form-row-static" style="margin-top: 20px;">
-        <h4><i class="fa fa-wrench"></i> Basic Options</h4>
+        <h4>
+            <i class="fa fa-wrench"></i>
+            Basic Options
+        </h4>
     </div>
 
     <div class="form-row form-row-static">
-        <label for="node-input-fromFormat"><i class="fa fa-filter"></i> From Formats</label>
+        <label for="node-input-fromFormat">
+            <i class="fa fa-filter"></i>
+            From Formats
+        </label>
         <select id="node-input-fromFormat" style="width: 70%" multiple>
             <option value="pdf">pdf</option>
             <option value="image">image</option>
@@ -158,14 +183,19 @@
     </div>
 
     <div class="form-row form-row-static">
-        <label for="node-input-source"><i class="fa fa-file"></i> Source</label>
-        <input type="text" id="node-input-source" placeholder="Path or URL">
-        <input type="hidden" id="node-input-sourceType">
+        <label for="node-input-source">
+            <i class="fa fa-file"></i>
+            Source
+        </label>
+        <input type="text" id="node-input-source" placeholder="Path or URL" />
+        <input type="hidden" id="node-input-sourceType" />
     </div>
 
-
     <div class="form-row form-row-static">
-        <label for="node-input-toFormat"><i class="fa fa-exchange"></i> To Formats</label>
+        <label for="node-input-toFormat">
+            <i class="fa fa-exchange"></i>
+            To Formats
+        </label>
         <select id="node-input-toFormat" style="width: 70%" multiple>
             <option value="md">md</option>
             <option value="json">json</option>
@@ -179,13 +209,19 @@
     </div>
 
     <div class="form-row form-row-static">
-        <label for="node-input-output"><i class="fa fa-folder-open"></i> Output Dir</label>
-        <input type="text" id="node-input-output" placeholder="Optional directory">
-        <input type="hidden" id="node-input-outputType">
+        <label for="node-input-output">
+            <i class="fa fa-folder-open"></i>
+            Output Dir
+        </label>
+        <input type="text" id="node-input-output" placeholder="Optional directory" />
+        <input type="hidden" id="node-input-outputType" />
     </div>
 
     <div class="form-row form-row-static">
-        <label for="node-input-imageExportMode"><i class="fa fa-picture-o"></i> Image Export</label>
+        <label for="node-input-imageExportMode">
+            <i class="fa fa-picture-o"></i>
+            Image Export
+        </label>
         <select id="node-input-imageExportMode" style="width: 70%">
             <option value="embedded">Embedded (Base64)</option>
             <option value="referenced">Referenced (PNGs)</option>
@@ -194,18 +230,29 @@
     </div>
 
     <div class="form-row form-row-static" style="margin-top: 20px;">
-        <h4><i class="fa fa-eye"></i> OCR Settings</h4>
+        <h4>
+            <i class="fa fa-eye"></i>
+            OCR Settings
+        </h4>
     </div>
 
     <div class="form-row form-row-static">
         <label for="node-input-ocr">&nbsp;</label>
-        <input type="checkbox" id="node-input-ocr" style="display: inline-block; width: auto; vertical-align: top;">
+        <input
+            type="checkbox"
+            id="node-input-ocr"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
         <label for="node-input-ocr" style="width: auto">Enable OCR</label>
     </div>
 
     <div class="form-row form-row-static row-ocr-options">
         <label for="node-input-forceOcr">&nbsp;</label>
-        <input type="checkbox" id="node-input-forceOcr" style="display: inline-block; width: auto; vertical-align: top;">
+        <input
+            type="checkbox"
+            id="node-input-forceOcr"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
         <label for="node-input-forceOcr" style="width: auto">Force OCR (full page)</label>
     </div>
 
@@ -222,7 +269,10 @@
     </div>
 
     <div class="form-row">
-        <label for="node-input-ocrLang"><i class="fa fa-language"></i> OCR Lang</label>
+        <label for="node-input-ocrLang">
+            <i class="fa fa-language"></i>
+            OCR Lang
+        </label>
         <select id="node-input-ocrLang" style="width: 70%;">
             <option value="">Default (Auto)</option>
             <option value="en">English (en)</option>
@@ -244,13 +294,23 @@
     </div>
 
     <div class="form-row form-row-static" style="margin-top: 20px;">
-        <h4><i class="fa fa-magic"></i> Extraction & Enrichments</h4>
+        <h4>
+            <i class="fa fa-magic"></i>
+            Extraction & Enrichments
+        </h4>
     </div>
 
     <div class="form-row form-row-static">
         <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-tables" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-tables" style="width: 70%;"><i class="fa fa-table"></i> Extract Tables</label>
+        <input
+            type="checkbox"
+            id="node-input-tables"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-tables" style="width: 70%;">
+            <i class="fa fa-table"></i>
+            Extract Tables
+        </label>
     </div>
 
     <div class="form-row form-row-static" id="row-tableMode">
@@ -263,30 +323,61 @@
 
     <div class="form-row form-row-static">
         <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-enrichChartExtraction" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-enrichChartExtraction" style="width: 70%;"><i class="fa fa-bar-chart"></i> Extract Chart Data</label>
+        <input
+            type="checkbox"
+            id="node-input-enrichChartExtraction"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-enrichChartExtraction" style="width: 70%;">
+            <i class="fa fa-bar-chart"></i>
+            Extract Chart Data
+        </label>
     </div>
 
     <div class="form-row form-row-static">
         <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-enrichCode" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-enrichCode" style="width: 70%;"><i class="fa fa-code"></i> Enrich Code</label>
+        <input
+            type="checkbox"
+            id="node-input-enrichCode"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-enrichCode" style="width: 70%;">
+            <i class="fa fa-code"></i>
+            Enrich Code
+        </label>
     </div>
 
     <div class="form-row form-row-static">
         <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-enrichFormula" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-enrichFormula" style="width: 70%;"><i class="fa fa-superscript"></i> Enrich Formula</label>
+        <input
+            type="checkbox"
+            id="node-input-enrichFormula"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-enrichFormula" style="width: 70%;">
+            <i class="fa fa-superscript"></i>
+            Enrich Formula
+        </label>
     </div>
 
     <div class="form-row form-row-static">
         <label>&nbsp;</label>
-        <input type="checkbox" id="node-input-enrichPictureClasses" style="display: inline-block; width: auto; vertical-align: top;">
-        <label for="node-input-enrichPictureClasses" style="width: 70%;"><i class="fa fa-picture-o"></i> Picture Classes</label>
+        <input
+            type="checkbox"
+            id="node-input-enrichPictureClasses"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
+        <label for="node-input-enrichPictureClasses" style="width: 70%;">
+            <i class="fa fa-picture-o"></i>
+            Picture Classes
+        </label>
     </div>
 
     <div class="form-row form-row-static" style="margin-top: 20px;">
-        <h4><i class="fa fa-cogs"></i> Advanced Pipeline</h4>
+        <h4>
+            <i class="fa fa-cogs"></i>
+            Advanced Pipeline
+        </h4>
     </div>
 
     <div class="form-row form-row-static">
@@ -343,72 +434,84 @@
 
     <div class="form-row form-row-static">
         <label for="node-input-artifactsPath">Artifacts Path</label>
-        <input type="text" id="node-input-artifactsPath" placeholder="Local models path">
+        <input type="text" id="node-input-artifactsPath" placeholder="Local models path" />
     </div>
 
     <div class="form-row form-row-static">
         <label for="node-input-documentTimeout">Timeout (s)</label>
-        <input type="number" id="node-input-documentTimeout" placeholder="Timeout in seconds">
+        <input type="number" id="node-input-documentTimeout" placeholder="Timeout in seconds" />
     </div>
 
     <div class="form-row form-row-static">
         <label for="node-input-profiling">&nbsp;</label>
-        <input type="checkbox" id="node-input-profiling" style="display: inline-block; width: auto; vertical-align: top;">
+        <input
+            type="checkbox"
+            id="node-input-profiling"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
         <label for="node-input-profiling" style="width: auto">Enable Profiling</label>
     </div>
 
     <div class="form-row form-row-static" id="row-saveProfiling">
         <label for="node-input-saveProfiling">&nbsp;</label>
-        <input type="checkbox" id="node-input-saveProfiling" style="display: inline-block; width: auto; vertical-align: top; margin-left: 25px;">
+        <input
+            type="checkbox"
+            id="node-input-saveProfiling"
+            style="display: inline-block; width: auto; vertical-align: top; margin-left: 25px;"
+        />
         <label for="node-input-saveProfiling" style="width: auto">Save Profiling (to JSON)</label>
     </div>
 
     <div class="form-row form-row-static">
         <label for="node-input-abortOnError">&nbsp;</label>
-        <input type="checkbox" id="node-input-abortOnError" style="display: inline-block; width: auto; vertical-align: top;">
+        <input
+            type="checkbox"
+            id="node-input-abortOnError"
+            style="display: inline-block; width: auto; vertical-align: top;"
+        />
         <label for="node-input-abortOnError" style="width: auto">Abort on Error</label>
     </div>
 </script>
 
-
 <script type="text/markdown" data-help-name="docling">
-A node to trigger the `docling` CLI to convert documents (PDF, DOCX, etc.) into structured formats (Markdown, JSON).
+    A node to trigger the `docling` CLI to convert documents (PDF, DOCX, etc.) into structured formats (Markdown, JSON).
 
-### Prerequisites
-The `docling` CLI must be installed and accessible in the system `$PATH` where Node-RED is running.
+    ### Prerequisites
 
-### Properties
+    The `docling` CLI must be installed and accessible in the system `$PATH` where Node-RED is running.
 
-* **Load from msg.file** *boolean*\
-  If enabled, the node will ignore the UI properties and expect standard parameters (like `msg.file.source`, `msg.file.toFormat`, `msg.file.output`, etc.) to be provided dynamically.
+    ### Properties
 
-* **Source** *string*\
-  Path or URL to the document(s) to process.
+    - **Load from msg.file** _boolean_\
+      If enabled, the node will ignore the UI properties and expect standard parameters (like `msg.file.source`, `msg.file.toFormat`, `msg.file.output`, etc.) to be provided dynamically.
 
-* **Output Dir** *string*\
-  Directory to save output files. If blank, uses the current working directory.
+    - **Source** _string_\
+      Path or URL to the document(s) to process.
 
-* **To Formats** *string*\
-  Comma-separated list of formats to export (e.g. `md`, `json`, `html`, `text`, `doctags`, `vtt`).
+    - **Output Dir** _string_\
+      Directory to save output files. If blank, uses the current working directory.
 
-* **OCR Settings** *checkboxes / dropdowns*\
-  Toggle OCR, force full-page OCR, and select engines (`easyocr`, `tesseract`, etc.) or language codes.
+    - **To Formats** _string_\
+      Comma-separated list of formats to export (e.g. `md`, `json`, `html`, `text`, `doctags`, `vtt`).
 
----
+    - **OCR Settings** _checkboxes / dropdowns_\
+      Toggle OCR, force full-page OCR, and select engines (`easyocr`, `tesseract`, etc.) or language codes.
 
-### Inputs
+    ---
 
-* **msg.file** *object*\
-  The incoming message parameters. Overrides configured UI properties if dynamic loading is enabled.
+    ### Inputs
 
-### Outputs
+    - **msg.file** _object_\
+      The incoming message parameters. Overrides configured UI properties if dynamic loading is enabled.
 
-* **msg.payload** *string*\
-  The standard output (stdout) from the docling CLI command.
+    ### Outputs
 
-* **msg.error** *string*\
-  The error output (stderr) if the command fails.
+    - **msg.payload** _string_\
+      The standard output (stdout) from the docling CLI command.
 
-* **msg.docling** *object*\
-  Contains metadata about the executed command (`command`, `source`, `action`).
+    - **msg.error** _string_\
+      The error output (stderr) if the command fails.
+
+    - **msg.docling** _object_\
+      Contains metadata about the executed command (`command`, `source`, `action`).
 </script>
