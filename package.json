@@ -2,14 +2,41 @@
   "name": "@faigle/node-red-contrib-docling",
   "version": "0.1.1",
   "description": "We like ducks",
-  "private": false,
+  "keywords": [
+    "node-red"
+  ],
+ "private": false,
   "license": "MIT",
   "node-red": {
     "nodes": {
       "docling": "src/docling.js"
     }
   },
+  "devDependencies": {
+    "@eslint/css": "^1.3.0",
+    "@eslint/js": "^10.0.1",
+    "@eslint/json": "^2.0.0",
+    "@eslint/markdown": "^8.0.2",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-html": "^8.1.4",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "mocha": "^11.7.6",
+    "node-red": "^5.0.0",
+    "node-red-node-test-helper": "^0.3.6",
+    "prettier": "^3.8.4"
+  },
   "scripts": {
-    "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/pip install --upgrade pip && ./.venv/bin/pip install pillow>=12.0.0 docling docling-surya easyocr rapidocr-onnxruntime transformers<5.0.0 tesserocr --upgrade"
+    "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/python -m pip install --upgrade pip wheel && ./.venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.12.1 torchvision==0.27.1 && ./.venv/bin/python -m pip install -r requirements-docling.txt -c constraints-docling.txt"
+    "prepare": "husky install",
+    "test": "mocha \"test/**/*_spec.js\"",
+    "format": "prettier --write \"**/*.{js,html,md}\"",
+    "lint": "eslint \"**/*.{js,html}\""
+  },
+  "lint-staged": {
+    "*.{js,html,md}": "prettier --write",
+    "*.{js,html}": "eslint"
   }
 }
