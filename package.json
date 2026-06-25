@@ -1,11 +1,11 @@
 {
   "name": "@faigle/node-red-contrib-docling",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "We like ducks",
   "keywords": [
     "node-red"
   ],
- "private": false,
+  "private": false,
   "license": "MIT",
   "node-red": {
     "nodes": {
@@ -29,7 +29,7 @@
     "prettier": "^3.8.4"
   },
   "scripts": {
-    "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/python -m pip install --upgrade pip wheel && ./.venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.12.1 torchvision==0.27.1 && ./.venv/bin/python -m pip install -r requirements-docling.txt -c constraints-docling.txt"
+    "postinstall": "pyenv exec python -m venv .venv && ./.venv/bin/python -m pip install --upgrade pip wheel && ./.venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.12.1 torchvision==0.27.1 && ./.venv/bin/python -m pip install -r requirements-docling.txt -c constraints-docling.txt",
     "prepare": "husky install",
     "test": "mocha \"test/**/*_spec.js\"",
     "format": "prettier --write \"**/*.{js,html,md}\"",
