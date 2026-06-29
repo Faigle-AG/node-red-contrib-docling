@@ -201,14 +201,25 @@ module.exports = function (RED) {
                 args.push(`"${src}"`);
 
                 const isWin = process.platform === 'win32';
-                const venvBinPath = path.join(__dirname, '..', '.venv', isWin ? 'Scripts' : 'bin');
+                const useSurya =
+                    process.env.DOCLING_WITH_SURYA === '1' ||
+                    process.env.DOCLING_WITH_SURYA === 'true';
 
-                if (!fs.existsSync(venvBinPath)) {
+                const venvName = useSurya ? '.venv-docling-surya' : '.venv-docling';
+                const venvPath = path.join(__dirname, '..', venvName);
+                const venvBinPath = path.join(venvPath, isWin ? 'Scripts' : 'bin');
+                const doclingBin = path.join(venvBinPath, isWin ? 'docling.exe' : 'docling');
+
+                if (!fs.existsSync(doclingBin)) {
                     const errMsg =
-                        "Local Docling environment not found. Run 'npm run postinstall' in the node directory.";
+                        `Local Docling environment not found: ${venvName}. ` +
+                        `Run '${useSurya ? 'npm run install:python:surya' : 'npm run install:python'}'.`;
+
                     node.status({ fill: 'red', shape: 'dot', text: 'Missing Environment' });
+
                     if (done) done(new Error(errMsg));
                     else node.error(errMsg, msg);
+
                     return;
                 }
 
@@ -217,9 +228,9 @@ module.exports = function (RED) {
                 customEnv[pathKey] = `${venvBinPath}${path.delimiter}${customEnv[pathKey] || ''}`;
 
                 if (!isWin) customEnv.SHELL = '/bin/bash';
-                customEnv.VIRTUAL_ENV = path.join(__dirname, '..', '.venv');
+                customEnv.VIRTUAL_ENV = venvPath;
 
-                const command = `docling ${args.join(' ')}`;
+                const command = `"${doclingBin}" ${args.join(' ')}`;
 
                 node.status({ fill: 'blue', shape: 'dot', text: 'Processing...' });
 

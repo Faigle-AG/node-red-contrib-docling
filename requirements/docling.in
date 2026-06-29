@@ -1,0 +1,6 @@
+pillow>=12.0.0
+docling
+tesserocr
+easyocr
+rapidocr-onnxruntime
+transformers<5.0.0
