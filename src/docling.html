@@ -473,45 +473,46 @@
     </div>
 </script>
 
+<!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="docling">
-    A node to trigger the `docling` CLI to convert documents (PDF, DOCX, etc.) into structured formats (Markdown, JSON).
+A node to trigger the `docling` CLI to convert documents (PDF, DOCX, etc.) into structured formats (Markdown, JSON).
 
-    ### Prerequisites
+### Prerequisites
 
-    The `docling` CLI must be installed and accessible in the system `$PATH` where Node-RED is running.
+The `docling` CLI must be installed and accessible in the system `$PATH` where Node-RED is running.
 
-    ### Properties
+### Properties
 
-    - **Load from msg.file** _boolean_\
-      If enabled, the node will ignore the UI properties and expect standard parameters (like `msg.file.source`, `msg.file.toFormat`, `msg.file.output`, etc.) to be provided dynamically.
+- **Load from msg.file** _boolean_ \
+  If enabled, the node will ignore the UI properties and expect standard parameters (like `msg.file.source`, `msg.file.toFormat`, `msg.file.output`, etc.) to be provided dynamically.
 
-    - **Source** _string_\
-      Path or URL to the document(s) to process.
+- **Source** _string_ \
+  Path or URL to the document(s) to process.
 
-    - **Output Dir** _string_\
-      Directory to save output files. If blank, uses the current working directory.
+- **Output Dir** _string_ \
+  Directory to save output files. If blank, uses the current working directory.
 
-    - **To Formats** _string_\
-      Comma-separated list of formats to export (e.g. `md`, `json`, `html`, `text`, `doctags`, `vtt`).
+- **To Formats** _string_ \
+  Comma-separated list of formats to export (e.g. `md`, `json`, `html`, `text`, `doctags`, `vtt`).
 
-    - **OCR Settings** _checkboxes / dropdowns_\
-      Toggle OCR, force full-page OCR, and select engines (`easyocr`, `tesseract`, etc.) or language codes.
+- **OCR Settings** _checkboxes / dropdowns_ \
+  Toggle OCR, force full-page OCR, and select engines (`easyocr`, `tesseract`, etc.) or language codes.
 
-    ---
+---
 
-    ### Inputs
+### Inputs
 
-    - **msg.file** _object_\
-      The incoming message parameters. Overrides configured UI properties if dynamic loading is enabled.
+- **msg.file** _object_ \
+  The incoming message parameters. Overrides configured UI properties if dynamic loading is enabled.
 
-    ### Outputs
+### Outputs
 
-    - **msg.payload** _string_\
-      The standard output (stdout) from the docling CLI command.
+- **msg.payload** _string_ \
+  The standard output (stdout) from the docling CLI command.
 
-    - **msg.error** _string_\
-      The error output (stderr) if the command fails.
+- **msg.error** _string_ \
+  The error output (stderr) if the command fails.
 
-    - **msg.docling** _object_\
-      Contains metadata about the executed command (`command`, `source`, `action`).
+- **msg.docling** _object_ \
+  Contains metadata about the executed command (`command`, `source`, `action`).
 </script>
