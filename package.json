@@ -1,6 +1,6 @@
 {
   "name": "@faigle/node-red-contrib-docling",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "We like ducks",
   "keywords": [
     "node-red"
@@ -29,7 +29,6 @@
     "prettier": "^3.8.4"
   },
   "scripts": {
-    "postinstall": "bash ./scripts/install-python-deps-cpu.sh",
     "install:python": "bash ./scripts/install-python-deps-cpu.sh",
     "install:python:surya": "DOCLING_WITH_SURYA=1 bash ./scripts/install-python-deps-cpu.sh",
     "prepare": "npx --yes husky",
