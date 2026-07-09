@@ -24,7 +24,7 @@ Install the Node-RED package, then initialize the Python backend from inside the
 
 ```bash
 cd ~/.node-red/node_modules/@faigle/node-red-contrib-docling
-npm run install:python
+npm run install:docling
 ```
 
 This creates the default local environment:
@@ -38,7 +38,7 @@ This creates the default local environment:
 To install Docling with Surya OCR support, run:
 
 ```bash
-npm run install:python:surya
+npm run install:docling:surya
 ```
 
 This creates:

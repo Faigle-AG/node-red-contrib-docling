@@ -2,6 +2,7 @@ module.exports = function (RED) {
     const fs = require('fs');
     const path = require('path');
     const { exec } = require('child_process');
+    const { extendNode } = require('@faigle/node-red-runtime-utils')(RED);
 
     function DoclingNode(config) {
         RED.nodes.createNode(this, config);
@@ -40,32 +41,33 @@ module.exports = function (RED) {
 
         var node = this;
 
-        node.on('input', function (msg, send, done) {
+        extendNode(node);
+
+        node.on('input', async function (msg, send, done) {
             try {
-                const getVal = (key, staticVal, isProp = false) => {
+                const getVal = async (key, staticVal, isProp = false) => {
                     if (node.dynamic) {
                         if (msg.file && msg.file[key] !== undefined) return msg.file[key];
                         return undefined;
                     }
                     if (isProp) {
-                        return RED.util.evaluateNodeProperty(
+                        return await node.getTypedProperty(
                             staticVal,
                             config[`${key}Type`] || 'str',
-                            node,
                             msg,
                         );
                     }
                     return staticVal;
                 };
 
-                const src = getVal('source', node.source, true);
+                const src = await getVal('source', node.source, true);
                 if (!src) throw new Error('Source is missing');
 
                 let args = [];
 
                 args.push('--allow-external-plugins');
 
-                const fromFmt = getVal('fromFormat', node.fromFormat);
+                const fromFmt = await getVal('fromFormat', node.fromFormat);
                 if (fromFmt) {
                     const fromFmtArray = Array.isArray(fromFmt) ? fromFmt : fromFmt.split(',');
                     fromFmtArray.forEach((f) => {
@@ -73,7 +75,7 @@ module.exports = function (RED) {
                     });
                 }
 
-                const toFmt = getVal('toFormat', node.toFormat);
+                const toFmt = await getVal('toFormat', node.toFormat);
                 if (toFmt) {
                     const toFmtArray = Array.isArray(toFmt) ? toFmt : toFmt.split(',');
                     toFmtArray.forEach((f) => {
@@ -81,25 +83,25 @@ module.exports = function (RED) {
                     });
                 }
 
-                const outDir = getVal('output', node.output, true);
+                const outDir = await getVal('output', node.output, true);
                 if (outDir) args.push('--output', `"${outDir}"`);
 
-                const imgExpMode = getVal('imageExportMode', node.imageExportMode);
+                const imgExpMode = await getVal('imageExportMode', node.imageExportMode);
                 if (imgExpMode) args.push('--image-export-mode', imgExpMode);
 
-                const enableOcr = getVal('ocr', node.ocr);
+                const enableOcr = await getVal('ocr', node.ocr);
                 if (enableOcr === false || enableOcr === 'false') {
                     args.push('--no-ocr');
                 } else {
-                    const fOcr = getVal('forceOcr', node.forceOcr);
+                    const fOcr = await getVal('forceOcr', node.forceOcr);
                     if (fOcr === true || fOcr === 'true') args.push('--force-ocr');
 
-                    const engine = getVal('ocrEngine', node.ocrEngine);
+                    const engine = await getVal('ocrEngine', node.ocrEngine);
                     if (engine && engine !== 'auto') {
                         args.push('--ocr-engine', engine);
                     }
 
-                    const rawLang = getVal('ocrLang', node.ocrLang);
+                    const rawLang = await getVal('ocrLang', node.ocrLang);
                     if (rawLang) {
                         const baseLang = rawLang.toLowerCase();
 
@@ -148,53 +150,53 @@ module.exports = function (RED) {
                     }
                 }
 
-                const enableTables = getVal('tables', node.tables);
+                const enableTables = await getVal('tables', node.tables);
                 if (enableTables === false || enableTables === 'false') args.push('--no-tables');
                 else {
-                    const tMode = getVal('tableMode', node.tableMode);
+                    const tMode = await getVal('tableMode', node.tableMode);
                     if (tMode && tMode !== 'accurate') args.push('--table-mode', tMode);
                 }
 
-                const eChart = getVal('enrichChartExtraction', node.enrichChartExtraction);
+                const eChart = await getVal('enrichChartExtraction', node.enrichChartExtraction);
                 if (eChart === true || eChart === 'true') args.push('--enrich-chart-extraction');
 
-                const eCode = getVal('enrichCode', node.enrichCode);
+                const eCode = await getVal('enrichCode', node.enrichCode);
                 if (eCode === true || eCode === 'true') args.push('--enrich-code');
 
-                const eForm = getVal('enrichFormula', node.enrichFormula);
+                const eForm = await getVal('enrichFormula', node.enrichFormula);
                 if (eForm === true || eForm === 'true') args.push('--enrich-formula');
 
-                const ePic = getVal('enrichPictureClasses', node.enrichPictureClasses);
+                const ePic = await getVal('enrichPictureClasses', node.enrichPictureClasses);
                 if (ePic === true || ePic === 'true') args.push('--enrich-picture-classes');
 
-                const dev = getVal('device', node.device);
+                const dev = await getVal('device', node.device);
                 if (dev && dev !== 'auto') args.push('--device', dev);
 
-                const pdfB = getVal('pdfBackend', node.pdfBackend);
+                const pdfB = await getVal('pdfBackend', node.pdfBackend);
                 if (pdfB && pdfB !== 'docling_parse') args.push('--pdf-backend', pdfB);
 
-                const pipe = getVal('pipeline', node.pipeline);
+                const pipe = await getVal('pipeline', node.pipeline);
                 if (pipe) {
                     args.push('--pipeline', pipe);
                     if (pipe === 'vlm') {
-                        const vlmM = getVal('vlmModel', node.vlmModel);
+                        const vlmM = await getVal('vlmModel', node.vlmModel);
                         if (vlmM) args.push('--vlm-model', vlmM);
                     }
                 }
 
-                const artPath = getVal('artifactsPath', node.artifactsPath);
+                const artPath = await getVal('artifactsPath', node.artifactsPath);
                 if (artPath) args.push('--artifacts-path', `"${artPath}"`);
 
-                const dTimeout = getVal('documentTimeout', node.documentTimeout);
+                const dTimeout = await getVal('documentTimeout', node.documentTimeout);
                 if (dTimeout) args.push('--document-timeout', dTimeout);
 
-                const abortErr = getVal('abortOnError', node.abortOnError);
+                const abortErr = await getVal('abortOnError', node.abortOnError);
                 if (abortErr === true || abortErr === 'true') args.push('--abort-on-error');
 
-                const prof = getVal('profiling', node.profiling);
+                const prof = await getVal('profiling', node.profiling);
                 if (prof === true || prof === 'true') {
                     args.push('--profiling');
-                    const sProf = getVal('saveProfiling', node.saveProfiling);
+                    const sProf = await getVal('saveProfiling', node.saveProfiling);
                     if (sProf === true || sProf === 'true') args.push('--save-profiling');
                 }
 
@@ -215,7 +217,7 @@ module.exports = function (RED) {
                         `Local Docling environment not found: ${venvName}. ` +
                         `Run '${useSurya ? 'npm run install:python:surya' : 'npm run install:python'}'.`;
 
-                    node.status({ fill: 'red', shape: 'dot', text: 'Missing Environment' });
+                    node.status.failed('Missing Environment');
 
                     if (done) done(new Error(errMsg));
                     else node.error(errMsg, msg);
@@ -232,7 +234,7 @@ module.exports = function (RED) {
 
                 const command = `"${doclingBin}" ${args.join(' ')}`;
 
-                node.status({ fill: 'blue', shape: 'dot', text: 'Processing...' });
+                node.status.processing('Processing...');
 
                 exec(
                     command,
@@ -248,25 +250,24 @@ module.exports = function (RED) {
                         };
 
                         if (error) {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Command failed' });
+                            node.status.failed('Command failed');
                             msg.payload = stdout;
                             msg.error = stderr || error.message;
 
                             if (done) done(error);
                             else node.error(error, msg);
                         } else {
-                            node.status({ fill: 'green', shape: 'dot', text: 'Success' });
+                            node.status.succeeded('Success');
                             msg.payload = stdout;
                             if (stderr) msg.warning = stderr;
 
                             send(msg);
                             if (done) done();
                         }
-                        setTimeout(() => node.status({}), 5000);
                     },
                 );
             } catch (err) {
-                node.status({ fill: 'red', shape: 'dot', text: 'Configuration error' });
+                node.status.failed('Configuration error');
 
                 if (done) done(err);
                 else node.error(err, msg);
