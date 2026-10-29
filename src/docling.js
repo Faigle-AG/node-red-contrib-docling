@@ -1,7 +1,7 @@
 module.exports = function (RED) {
     const fs = require('fs');
     const path = require('path');
-    const { exec } = require('child_process');
+    const { execFile } = require('child_process');
     const { extendNode } = require('@faigle/node-red-runtime-utils')(RED);
 
     function DoclingNode(config) {
@@ -84,7 +84,7 @@ module.exports = function (RED) {
                 }
 
                 const outDir = await getVal('output', node.output, true);
-                if (outDir) args.push('--output', `"${outDir}"`);
+                if (outDir) args.push('--output', outDir);
 
                 const imgExpMode = await getVal('imageExportMode', node.imageExportMode);
                 if (imgExpMode) args.push('--image-export-mode', imgExpMode);
@@ -185,7 +185,7 @@ module.exports = function (RED) {
                 }
 
                 const artPath = await getVal('artifactsPath', node.artifactsPath);
-                if (artPath) args.push('--artifacts-path', `"${artPath}"`);
+                if (artPath) args.push('--artifacts-path', artPath);
 
                 const dTimeout = await getVal('documentTimeout', node.documentTimeout);
                 if (dTimeout) args.push('--document-timeout', dTimeout);
@@ -200,7 +200,9 @@ module.exports = function (RED) {
                     if (sProf === true || sProf === 'true') args.push('--save-profiling');
                 }
 
-                args.push(`"${src}"`);
+                // '--' ends option parsing, so a source starting with '-' stays a source.
+                args.push('--', src);
+                args = args.map(String);
 
                 const isWin = process.platform === 'win32';
                 const useSurya =
@@ -232,19 +234,18 @@ module.exports = function (RED) {
                 if (!isWin) customEnv.SHELL = '/bin/bash';
                 customEnv.VIRTUAL_ENV = venvPath;
 
-                const command = `"${doclingBin}" ${args.join(' ')}`;
-
                 node.status.processing('Processing...');
 
-                exec(
-                    command,
+                execFile(
+                    doclingBin,
+                    args,
                     {
                         maxBuffer: 1024 * 1024 * 10,
                         env: customEnv,
+                        windowsHide: true,
                     },
                     (error, stdout, stderr) => {
                         msg.docling = {
-                            command: command,
                             source: src,
                             action: 'docling',
                         };

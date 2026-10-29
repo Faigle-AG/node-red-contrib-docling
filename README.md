@@ -372,6 +372,14 @@ msg.file = {
 return msg;
 ```
 
+## Execution and safety
+
+The node launches its package-local Docling executable directly with an argument array, without a shell. Source paths and option values are passed literally after the existing format/language conversions; shell variables, command substitutions, pipes and redirections are not evaluated. Resolve environment values or construct paths explicitly in Node-RED instead of relying on shell expansion. The source follows an end-of-options marker (`--`), so a source beginning with `-` is treated as a source, not another CLI option.
+
+**Breaking change:** `msg.docling.command` has been removed from the node's execution metadata. Update flows that read it; `msg.docling.source` and `msg.docling.action` remain available. There is no replacement command or argument-list field. Do not reconstruct shell commands from untrusted message values. Flows that previously relied on shell expansion in a configured or dynamic value must now resolve that value explicitly.
+
+Direct execution is **not a sandbox**. Docling and its enabled plugins run with the Node-RED process user's permissions; configured paths and URL sources still determine filesystem and network access. This launch change does not audit the converter or its plugins, guarantee safety of arbitrary documents, or undo files already written if conversion fails. Source paths/URLs, stdout, stderr and error diagnostics may contain sensitive data; removing the command metadata is not a redaction guarantee.
+
 ## Output
 
 On success, the node forwards the incoming message and sets:
@@ -390,7 +398,6 @@ Execution metadata:
 
 ```js
 msg.docling = {
-    command: '...',
     source: '/path/to/document.pdf',
     action: 'docling',
 };
@@ -414,7 +421,7 @@ Where:
 
 - `msg.payload` contains stdout
 - `msg.error` contains stderr or the error message
-- `msg.docling` contains command metadata
+- `msg.docling` contains source/action metadata
 
 ## Status Indicators
 
