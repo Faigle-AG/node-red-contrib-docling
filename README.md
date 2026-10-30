@@ -380,6 +380,14 @@ The node launches its package-local Docling executable directly with an argument
 
 Direct execution is **not a sandbox**. Docling and its enabled plugins run with the Node-RED process user's permissions; configured paths and URL sources still determine filesystem and network access. This launch change does not audit the converter or its plugins, guarantee safety of arbitrary documents, or undo files already written if conversion fails. Source paths/URLs, stdout, stderr and error diagnostics may contain sensitive data; removing the command metadata is not a redaction guarantee.
 
+### Stop and redeploy
+
+**Behavior change:** when the node closes, including during stop or redeploy, it now attempts to terminate each running conversion's direct child with `child.kill()` (default `SIGTERM`). Previously, a conversion could continue and forward its result after the node closed.
+
+If close occurs while options are resolving, the node does not launch a new conversion for that input. Option-resolution errors and converter callbacks arriving after close complete quietly, without forwarding a message or reporting a late conversion error or status update. In-progress context reads are not cancelled.
+
+Termination is **best effort**: signaling can fail, a child can ignore the signal, and descendant processes are not covered. A signaling exception produces a warning without preventing attempts for the other children. Close does not wait for process exit, guarantee that conversion has stopped, or roll back output files; partially written files may remain.
+
 ## Output
 
 On success, the node forwards the incoming message and sets:
@@ -440,13 +448,13 @@ The node displays runtime status in the Node-RED editor:
 If the node reports a missing environment, run one of:
 
 ```bash
-npm run install:python
+npm run install:docling
 ```
 
 or:
 
 ```bash
-npm run install:python:surya
+npm run install:docling:surya
 ```
 
 ### Python version error
@@ -460,7 +468,7 @@ Install Python 3.12 directly or install it through `pyenv`.
 Install the Surya environment:
 
 ```bash
-npm run install:python:surya
+npm run install:docling:surya
 ```
 
 Then start Node-RED with:

@@ -1,12 +1,19 @@
 {
   "name": "@faigle/node-red-contrib-docling",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "We like ducks",
   "keywords": [
     "node-red"
   ],
   "private": false,
   "license": "MIT",
+  "files": [
+    "src",
+    "scripts",
+    "requirements",
+    "README.md",
+    "LICENSE"
+  ],
   "node-red": {
     "nodes": {
       "docling": "src/docling.js"

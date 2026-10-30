@@ -4,19 +4,37 @@ const fs = require('fs');
 const path = require('path');
 const helper = require('node-red-node-test-helper');
 const doclingNode = require('../src/docling.js');
-const { trigger, lastStatusText } = require('./helpers/harness');
+const packageJson = require('../package.json');
+const { trigger, lastStatusText, delay } = require('./helpers/harness');
 
 helper.init(require.resolve('node-red'));
 
 const isWin = process.platform === 'win32';
-const DOCLING_BIN = path.join(
-    __dirname,
-    '..',
-    '.venv-docling',
-    isWin ? 'Scripts' : 'bin',
-    isWin ? 'docling.exe' : 'docling',
-);
+const doclingBin = (venv) =>
+    path.join(__dirname, '..', venv, isWin ? 'Scripts' : 'bin', isWin ? 'docling.exe' : 'docling');
+const DOCLING_BIN = doclingBin('.venv-docling');
+const DOCLING_SURYA_BIN = doclingBin('.venv-docling-surya');
 const HOSTILE = 'in $(touch pwned) `id` "q" \'s\' ; | & > x\nnext.pdf';
+
+// Stands in for the ChildProcess returned by execFile; records kill() calls.
+function fakeChild() {
+    const child = { kills: 0, throwOnKill: false };
+    child.kill = () => {
+        child.kills += 1;
+        if (child.throwOnKill) throw new Error('kill failed');
+        return true;
+    };
+    return child;
+}
+
+// The error execFile reports for a process that was stopped with SIGTERM.
+function killedError() {
+    return Object.assign(new Error('Command failed'), {
+        killed: true,
+        signal: 'SIGTERM',
+        code: null,
+    });
+}
 
 // The docling launch boundary (S1). child_process.exec/execFile and the venv existence check
 // are stubbed, so no shell, converter, Python environment or network is ever used, and the real
@@ -54,10 +72,12 @@ describe('docling node launch', function () {
         };
         delete process.env.DOCLING_WITH_SURYA;
         childProcess.execFile = (file, args, options, callback) => {
-            calls.push({ api: 'execFile', file, args, options });
-            const { error = null, stdout = '', stderr = '' } = reply();
-            process.nextTick(callback, error, stdout, stderr);
-            return {};
+            const child = fakeChild();
+            calls.push({ api: 'execFile', file, args, options, child, callback });
+            const { error = null, stdout = '', stderr = '', hold = false } = reply();
+            // A held run finishes only when the test calls `callback` itself.
+            if (!hold) process.nextTick(callback, error, stdout, stderr);
+            return child;
         };
         childProcess.exec = (command, options, callback) => {
             calls.push({ api: 'exec', command, options });
@@ -65,7 +85,9 @@ describe('docling node launch', function () {
             return {};
         };
         fs.existsSync = (target) =>
-            target === DOCLING_BIN ? venvPresent : saved.existsSync(target);
+            target === DOCLING_BIN || target === DOCLING_SURYA_BIN
+                ? venvPresent
+                : saved.existsSync(target);
     });
 
     after(function () {
@@ -235,6 +257,33 @@ describe('docling node launch', function () {
         assert.deepEqual(calls, []);
     });
 
+    for (const surya of [false, true]) {
+        it(`names an existing install script when the ${surya ? 'Surya ' : ''}environment is missing`, async function () {
+            venvPresent = false;
+            if (surya) process.env.DOCLING_WITH_SURYA = '1';
+            try {
+                await load({});
+                const result = await trigger(helper, 'n1', 'out', {});
+
+                const venv = surya ? '.venv-docling-surya' : '.venv-docling';
+                const named = result.err.message.match(/Run 'npm run ([^']+)'/);
+                assert.ok(
+                    result.err.message.startsWith(`Local Docling environment not found: ${venv}.`),
+                );
+                assert.ok(named, 'the message names an npm script');
+                assert.ok(
+                    Object.hasOwn(packageJson.scripts, named[1]),
+                    `package.json defines "${named[1]}"`,
+                );
+                assert.equal(named[1], surya ? 'install:docling:surya' : 'install:docling');
+                assert.equal(lastStatusText(result), 'Missing Environment');
+                assert.deepEqual(calls, []);
+            } finally {
+                delete process.env.DOCLING_WITH_SURYA;
+            }
+        });
+    }
+
     it('reports a missing source as a configuration error without launching anything', async function () {
         await load({ source: '' });
 
@@ -254,5 +303,166 @@ describe('docling node launch', function () {
             calls.filter((call) => call.api === 'exec'),
             [],
         );
+    });
+
+    describe('close', function () {
+        // Records what the node does: sends, errors, statuses and done() completions.
+        // send, error and _complete are wrapped directly, so calls made after close are
+        // still seen.
+        function watch(node) {
+            const seen = { sends: [], errors: [], statuses: [], completions: [] };
+            node.on('call:status', (call) => seen.statuses.push(call.args[0]));
+            const record = (name, list) => {
+                const original = node[name];
+                node[name] = function (...args) {
+                    list.push(name === '_complete' ? args[1] : args[0]);
+                    return original.apply(this, args);
+                };
+            };
+            record('send', seen.sends);
+            record('error', seen.errors);
+            record('_complete', seen.completions);
+            return seen;
+        }
+
+        async function launched(count) {
+            for (let i = 0; i < 100 && calls.length < count; i++) await delay(10);
+            assert.equal(calls.length, count);
+        }
+
+        it('stops a running conversion on close and reports nothing for it', async function () {
+            reply = () => ({ hold: true });
+            await load({});
+            const node = helper.getNode('n1');
+            const seen = watch(node);
+
+            node.receive({});
+            await launched(1);
+            await helper.unload();
+            await delay(0); // call:status events arrive on the next tick
+            const statusesAtClose = seen.statuses.length;
+
+            assert.equal(calls[0].child.kills, 1);
+            calls[0].callback(killedError(), 'partial', 'terminated');
+            await delay(20);
+
+            assert.deepEqual(seen.sends, []);
+            assert.deepEqual(seen.errors, []);
+            assert.deepEqual(seen.statuses.slice(statusesAtClose), []);
+            assert.deepEqual(seen.completions, [undefined]);
+        });
+
+        it('stops every conversion still running on close', async function () {
+            reply = () => ({ hold: true });
+            await load({});
+            const node = helper.getNode('n1');
+            const seen = watch(node);
+
+            node.receive({});
+            node.receive({});
+            await launched(2);
+            await helper.unload();
+
+            assert.deepEqual(
+                calls.map((call) => call.child.kills),
+                [1, 1],
+            );
+            for (const call of calls) call.callback(killedError(), '', '');
+            await delay(20);
+
+            assert.deepEqual(seen.sends, []);
+            assert.deepEqual(seen.errors, []);
+            assert.deepEqual(seen.completions, [undefined, undefined]);
+        });
+
+        it('does not stop a conversion that finished before close', async function () {
+            await load({});
+
+            const result = await trigger(helper, 'n1', 'out', {});
+            await helper.unload();
+
+            assert.equal(result.msg.payload, 'converted');
+            assert.equal(calls[0].child.kills, 0);
+        });
+
+        // Holds the source lookup of the next input until `release(error)` is called.
+        function holdSourceLookup(node) {
+            const resolve = node.getTypedProperty;
+            const lookup = { started: false };
+            const gate = new Promise((done) => (lookup.release = done));
+            node.getTypedProperty = async (...args) => {
+                lookup.started = true;
+                const error = await gate;
+                if (error) throw error;
+                return resolve.apply(node, args);
+            };
+            return lookup;
+        }
+
+        it('does not launch docling when close happens while options are resolved', async function () {
+            await load({});
+            const node = helper.getNode('n1');
+            const seen = watch(node);
+            const lookup = holdSourceLookup(node);
+
+            node.receive({});
+            for (let i = 0; i < 100 && !lookup.started; i++) await delay(10);
+            assert.equal(lookup.started, true);
+            await helper.unload();
+            await delay(0); // call:status events arrive on the next tick
+            const statusesAtClose = seen.statuses.length;
+            lookup.release();
+            await delay(20);
+
+            assert.deepEqual(calls, []);
+            assert.deepEqual(seen.sends, []);
+            assert.deepEqual(seen.errors, []);
+            assert.deepEqual(seen.statuses.slice(statusesAtClose), []);
+            assert.deepEqual(seen.completions, [undefined]);
+        });
+
+        it('does not report an option error that surfaces after close', async function () {
+            await load({});
+            const node = helper.getNode('n1');
+            const seen = watch(node);
+            const lookup = holdSourceLookup(node);
+
+            node.receive({});
+            for (let i = 0; i < 100 && !lookup.started; i++) await delay(10);
+            await helper.unload();
+            await delay(0); // call:status events arrive on the next tick
+            const statusesAtClose = seen.statuses.length;
+            lookup.release(new Error('context is gone'));
+            await delay(20);
+
+            assert.deepEqual(calls, []);
+            assert.deepEqual(seen.errors, []);
+            assert.deepEqual(seen.statuses.slice(statusesAtClose), []);
+            assert.deepEqual(seen.completions, [undefined]);
+        });
+
+        it('keeps stopping the other conversions when one cannot be stopped', async function () {
+            reply = () => ({ hold: true });
+            await load({});
+            const node = helper.getNode('n1');
+            const seen = watch(node);
+
+            node.receive({});
+            node.receive({});
+            await launched(2);
+            calls[0].child.throwOnKill = true;
+            await helper.unload();
+
+            assert.deepEqual(
+                calls.map((call) => call.child.kills),
+                [1, 1],
+            );
+            for (const call of calls) call.callback(killedError(), '', '');
+            await delay(20);
+
+            assert.deepEqual(seen.sends, []);
+            assert.deepEqual(seen.errors, []);
+            assert.deepEqual(seen.completions, [undefined, undefined]);
+        });
     });
 });

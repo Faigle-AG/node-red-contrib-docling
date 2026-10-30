@@ -43,6 +43,24 @@ module.exports = function (RED) {
 
         extendNode(node);
 
+        // On close, each running conversion's docling process is sent SIGTERM (best effort:
+        // only the direct child, which may ignore it), and its late result is neither sent
+        // nor reported.
+        const pending = new Set();
+        let closing = false;
+
+        node.on('close', function () {
+            closing = true;
+            for (const child of pending) {
+                try {
+                    child.kill();
+                } catch (err) {
+                    node.warn(`Could not stop a running docling process: ${err.message}`);
+                }
+            }
+            node.status.clear();
+        });
+
         node.on('input', async function (msg, send, done) {
             try {
                 const getVal = async (key, staticVal, isProp = false) => {
@@ -204,6 +222,12 @@ module.exports = function (RED) {
                 args.push('--', src);
                 args = args.map(String);
 
+                // The node may have closed while the options above were resolved.
+                if (closing) {
+                    if (done) done();
+                    return;
+                }
+
                 const isWin = process.platform === 'win32';
                 const useSurya =
                     process.env.DOCLING_WITH_SURYA === '1' ||
@@ -217,7 +241,7 @@ module.exports = function (RED) {
                 if (!fs.existsSync(doclingBin)) {
                     const errMsg =
                         `Local Docling environment not found: ${venvName}. ` +
-                        `Run '${useSurya ? 'npm run install:python:surya' : 'npm run install:python'}'.`;
+                        `Run '${useSurya ? 'npm run install:docling:surya' : 'npm run install:docling'}'.`;
 
                     node.status.failed('Missing Environment');
 
@@ -236,7 +260,7 @@ module.exports = function (RED) {
 
                 node.status.processing('Processing...');
 
-                execFile(
+                const child = execFile(
                     doclingBin,
                     args,
                     {
@@ -245,6 +269,12 @@ module.exports = function (RED) {
                         windowsHide: true,
                     },
                     (error, stdout, stderr) => {
+                        pending.delete(child);
+                        if (closing) {
+                            if (done) done();
+                            return;
+                        }
+
                         msg.docling = {
                             source: src,
                             action: 'docling',
@@ -267,7 +297,13 @@ module.exports = function (RED) {
                         }
                     },
                 );
+                pending.add(child);
             } catch (err) {
+                if (closing) {
+                    if (done) done();
+                    return;
+                }
+
                 node.status.failed('Configuration error');
 
                 if (done) done(err);
