@@ -127,359 +127,307 @@
     });
 </script>
 
-<style>
-    .flex-checkbox-row {
-        display: flex;
-        align-items: center;
-        padding-left: 104px;
-        margin-bottom: 12px;
-    }
-
-    .flex-checkbox-row input[type='checkbox'] {
-        width: auto !important;
-        margin: 0 8px 0 0 !important;
-    }
-
-    .flex-checkbox-row label {
-        width: auto !important;
-        margin: 0 !important;
-    }
-
-    fieldset.node-red-fieldset {
-        border: 1px solid var(--red-ui-form-input-border-color, #ccc) !important;
-        padding: 12px !important;
-        margin-bottom: 12px !important;
-        border-radius: 4px !important;
-    }
-
-    fieldset.node-red-fieldset legend {
-        border-bottom: none !important;
-        width: auto !important;
-        padding: 0 5px !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-        color: var(--red-ui-primary-text-color, #555) !important;
-        margin-bottom: 0 !important;
-    }
-
-    .input-width-70 {
-        width: 70% !important;
-    }
-</style>
+<link rel="stylesheet" href="resources/@faigle/node-red-runtime-utils/editor.css" />
 
 <script type="text/html" data-template-name="docling">
-    <div class="form-row">
-        <label for="node-input-name">
-            <i class="fa fa-tag"></i>
-            <span>Name</span>
-        </label>
-        <input type="text" id="node-input-name" class="input-width-70" placeholder="Name" />
+    <div class="faigle-node-editor">
+        <div class="form-row">
+            <label for="node-input-name">
+                <i class="fa fa-tag"></i>
+                <span>Name</span>
+            </label>
+            <input type="text" id="node-input-name" placeholder="Name" />
+        </div>
+
+        <div class="form-row flex-checkbox-row">
+            <input type="checkbox" id="node-input-dynamic" />
+            <label for="node-input-dynamic">
+                <i class="fa fa-usb"></i>
+                Load from msg.file
+            </label>
+        </div>
+
+        <fieldset class="node-red-fieldset form-row-static">
+            <legend>
+                <i class="fa fa-wrench"></i>
+                Basic Options
+            </legend>
+
+            <div class="form-row">
+                <label for="node-input-fromFormat">
+                    <i class="fa fa-filter"></i>
+                    From Formats
+                </label>
+                <select id="node-input-fromFormat" multiple>
+                    <option value="pdf">pdf</option>
+                    <option value="image">image</option>
+                    <option value="docx">docx</option>
+                    <option value="pptx">pptx</option>
+                    <option value="xlsx">xlsx</option>
+                    <option value="html">html</option>
+                    <option value="md">md</option>
+                    <option value="json_docling">json_docling</option>
+                    <option value="asciidoc">asciidoc</option>
+                    <option value="csv">csv</option>
+                    <option value="xml_uspto">xml_uspto</option>
+                    <option value="xml_jats">xml_jats</option>
+                    <option value="xml_xbrl">xml_xbrl</option>
+                    <option value="mets_gbs">mets_gbs</option>
+                    <option value="audio">audio</option>
+                    <option value="vtt">vtt</option>
+                    <option value="latex">latex</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-source">
+                    <i class="fa fa-file"></i>
+                    Source
+                </label>
+                <input type="text" id="node-input-source" placeholder="Path or URL" />
+                <input type="hidden" id="node-input-sourceType" />
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-toFormat">
+                    <i class="fa fa-exchange"></i>
+                    To Formats
+                </label>
+                <select id="node-input-toFormat" multiple>
+                    <option value="md">md</option>
+                    <option value="json">json</option>
+                    <option value="yaml">yaml</option>
+                    <option value="html">html</option>
+                    <option value="html_split_page">html_split_page</option>
+                    <option value="text">text</option>
+                    <option value="doctags">doctags</option>
+                    <option value="vtt">vtt</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-output">
+                    <i class="fa fa-folder-open"></i>
+                    Output Dir
+                </label>
+                <input type="text" id="node-input-output" placeholder="Optional directory" />
+                <input type="hidden" id="node-input-outputType" />
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-imageExportMode">
+                    <i class="fa fa-picture-o"></i>
+                    Image Export
+                </label>
+                <select id="node-input-imageExportMode">
+                    <option value="embedded">Embedded (Base64)</option>
+                    <option value="referenced">Referenced (PNGs)</option>
+                    <option value="placeholder">Placeholder Only</option>
+                </select>
+            </div>
+        </fieldset>
+
+        <fieldset class="node-red-fieldset form-row-static">
+            <legend>
+                <i class="fa fa-eye"></i>
+                OCR Settings
+            </legend>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-ocr" />
+                <label for="node-input-ocr">Enable OCR</label>
+            </div>
+
+            <div class="form-row flex-checkbox-row row-ocr-options">
+                <input type="checkbox" id="node-input-forceOcr" />
+                <label for="node-input-forceOcr">Force OCR (full page)</label>
+            </div>
+
+            <div class="form-row row-ocr-options">
+                <label for="node-input-ocrEngine">OCR Engine</label>
+                <select id="node-input-ocrEngine">
+                    <option value="auto">Auto</option>
+                    <option value="easyocr">EasyOCR</option>
+                    <option value="tesseract">Tesseract</option>
+                    <option value="rapidocr">RapidOCR</option>
+                    <option value="ocrmac">OCR Mac</option>
+                    <option value="suryaocr">SuryaOCR</option>
+                </select>
+            </div>
+
+            <div class="form-row row-ocr-options">
+                <label for="node-input-ocrLang">
+                    <i class="fa fa-language"></i>
+                    OCR Lang
+                </label>
+                <select id="node-input-ocrLang">
+                    <option value="">Default (Auto)</option>
+                    <option value="en">English (en)</option>
+                    <option value="de">German (de)</option>
+                    <option value="fr">French (fr)</option>
+                    <option value="es">Spanish (es)</option>
+                    <option value="it">Italian (it)</option>
+                    <option value="pt">Portuguese (pt)</option>
+                    <option value="nl">Dutch (nl)</option>
+                    <option value="ru">Russian (ru)</option>
+                    <option value="zh">Chinese (zh)</option>
+                    <option value="ja">Japanese (ja)</option>
+                    <option value="ko">Korean (ko)</option>
+                    <option value="ar">Arabic (ar)</option>
+                    <option value="hi">Hindi (hi)</option>
+                    <option value="tr">Turkish (tr)</option>
+                    <option value="pl">Polish (pl)</option>
+                </select>
+            </div>
+        </fieldset>
+
+        <fieldset class="node-red-fieldset form-row-static">
+            <legend>
+                <i class="fa fa-magic"></i>
+                Extraction & Enrichments
+            </legend>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-tables" />
+                <label for="node-input-tables">
+                    <i class="fa fa-table"></i>
+                    Extract Tables
+                </label>
+            </div>
+
+            <div class="form-row" id="row-tableMode">
+                <label for="node-input-tableMode" style="padding-left: 25px;">Table Mode</label>
+                <select id="node-input-tableMode" style="width: calc(70% - 25px)">
+                    <option value="accurate">Accurate</option>
+                    <option value="fast">Fast</option>
+                </select>
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-enrichChartExtraction" />
+                <label for="node-input-enrichChartExtraction">
+                    <i class="fa fa-bar-chart"></i>
+                    Extract Chart Data
+                </label>
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-enrichCode" />
+                <label for="node-input-enrichCode">
+                    <i class="fa fa-code"></i>
+                    Enrich Code
+                </label>
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-enrichFormula" />
+                <label for="node-input-enrichFormula">
+                    <i class="fa fa-superscript"></i>
+                    Enrich Formula
+                </label>
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-enrichPictureClasses" />
+                <label for="node-input-enrichPictureClasses">
+                    <i class="fa fa-picture-o"></i>
+                    Picture Classes
+                </label>
+            </div>
+        </fieldset>
+
+        <fieldset class="node-red-fieldset form-row-static">
+            <legend>
+                <i class="fa fa-cogs"></i>
+                Advanced Pipeline
+            </legend>
+
+            <div class="form-row">
+                <label for="node-input-device">Device</label>
+                <select id="node-input-device">
+                    <option value="auto">Auto</option>
+                    <option value="cpu">CPU</option>
+                    <option value="cuda">CUDA</option>
+                    <option value="mps">MPS</option>
+                    <option value="xpu">XPU</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-pdfBackend">PDF Backend</label>
+                <select id="node-input-pdfBackend">
+                    <option value="docling_parse">Docling Parse</option>
+                    <option value="threaded_docling_parse">Threaded Docling Parse</option>
+                    <option value="pypdfium2">PyPDFium2</option>
+                    <option value="dlparse_v1">DLParse V1</option>
+                    <option value="dlparse_v2">DLParse V2</option>
+                    <option value="dlparse_v4">DLParse V4</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-pipeline">Pipeline</label>
+                <select id="node-input-pipeline">
+                    <option value="">Standard (Default)</option>
+                    <option value="vlm">VLM</option>
+                </select>
+            </div>
+
+            <div class="form-row" id="row-vlmModel">
+                <label for="node-input-vlmModel">VLM Model</label>
+                <select id="node-input-vlmModel">
+                    <option value="smoldocling">smoldocling</option>
+                    <option value="granite_docling">granite_docling</option>
+                    <option value="deepseek_ocr">deepseek_ocr</option>
+                    <option value="granite_vision">granite_vision</option>
+                    <option value="pixtral">pixtral</option>
+                    <option value="got_ocr">got_ocr</option>
+                    <option value="phi4">phi4</option>
+                    <option value="qwen">qwen</option>
+                    <option value="nanonets_ocr2">nanonets_ocr2</option>
+                    <option value="gemma_12b">gemma_12b</option>
+                    <option value="gemma_27b">gemma_27b</option>
+                    <option value="dolphin">dolphin</option>
+                    <option value="glm_ocr">glm_ocr</option>
+                    <option value="lightonocr">lightonocr</option>
+                    <option value="falcon_ocr">falcon_ocr</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-artifactsPath">Artifacts Path</label>
+                <input type="text" id="node-input-artifactsPath" placeholder="Local models path" />
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-documentTimeout">Timeout (s)</label>
+                <input
+                    type="number"
+                    id="node-input-documentTimeout"
+                    placeholder="Timeout in seconds"
+                />
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-profiling" />
+                <label for="node-input-profiling">Enable Profiling</label>
+            </div>
+
+            <div class="form-row flex-checkbox-row" id="row-saveProfiling">
+                <input
+                    type="checkbox"
+                    id="node-input-saveProfiling"
+                    style="margin-left: 25px !important;"
+                />
+                <label for="node-input-saveProfiling">Save Profiling (to JSON)</label>
+            </div>
+
+            <div class="form-row flex-checkbox-row">
+                <input type="checkbox" id="node-input-abortOnError" />
+                <label for="node-input-abortOnError">Abort on Error</label>
+            </div>
+        </fieldset>
     </div>
-
-    <div class="form-row flex-checkbox-row">
-        <input type="checkbox" id="node-input-dynamic" />
-        <label for="node-input-dynamic">
-            <i class="fa fa-usb"></i>
-            Load from msg.file
-        </label>
-    </div>
-
-    <fieldset class="node-red-fieldset form-row-static">
-        <legend>
-            <i class="fa fa-wrench"></i>
-            Basic Options
-        </legend>
-
-        <div class="form-row">
-            <label for="node-input-fromFormat">
-                <i class="fa fa-filter"></i>
-                From Formats
-            </label>
-            <select id="node-input-fromFormat" class="input-width-70" multiple>
-                <option value="pdf">pdf</option>
-                <option value="image">image</option>
-                <option value="docx">docx</option>
-                <option value="pptx">pptx</option>
-                <option value="xlsx">xlsx</option>
-                <option value="html">html</option>
-                <option value="md">md</option>
-                <option value="json_docling">json_docling</option>
-                <option value="asciidoc">asciidoc</option>
-                <option value="csv">csv</option>
-                <option value="xml_uspto">xml_uspto</option>
-                <option value="xml_jats">xml_jats</option>
-                <option value="xml_xbrl">xml_xbrl</option>
-                <option value="mets_gbs">mets_gbs</option>
-                <option value="audio">audio</option>
-                <option value="vtt">vtt</option>
-                <option value="latex">latex</option>
-            </select>
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-source">
-                <i class="fa fa-file"></i>
-                Source
-            </label>
-            <input
-                type="text"
-                id="node-input-source"
-                class="input-width-70"
-                placeholder="Path or URL"
-            />
-            <input type="hidden" id="node-input-sourceType" />
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-toFormat">
-                <i class="fa fa-exchange"></i>
-                To Formats
-            </label>
-            <select id="node-input-toFormat" class="input-width-70" multiple>
-                <option value="md">md</option>
-                <option value="json">json</option>
-                <option value="yaml">yaml</option>
-                <option value="html">html</option>
-                <option value="html_split_page">html_split_page</option>
-                <option value="text">text</option>
-                <option value="doctags">doctags</option>
-                <option value="vtt">vtt</option>
-            </select>
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-output">
-                <i class="fa fa-folder-open"></i>
-                Output Dir
-            </label>
-            <input
-                type="text"
-                id="node-input-output"
-                class="input-width-70"
-                placeholder="Optional directory"
-            />
-            <input type="hidden" id="node-input-outputType" />
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-imageExportMode">
-                <i class="fa fa-picture-o"></i>
-                Image Export
-            </label>
-            <select id="node-input-imageExportMode" class="input-width-70">
-                <option value="embedded">Embedded (Base64)</option>
-                <option value="referenced">Referenced (PNGs)</option>
-                <option value="placeholder">Placeholder Only</option>
-            </select>
-        </div>
-    </fieldset>
-
-    <fieldset class="node-red-fieldset form-row-static">
-        <legend>
-            <i class="fa fa-eye"></i>
-            OCR Settings
-        </legend>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-ocr" />
-            <label for="node-input-ocr">Enable OCR</label>
-        </div>
-
-        <div class="form-row flex-checkbox-row row-ocr-options">
-            <input type="checkbox" id="node-input-forceOcr" />
-            <label for="node-input-forceOcr">Force OCR (full page)</label>
-        </div>
-
-        <div class="form-row row-ocr-options">
-            <label for="node-input-ocrEngine">OCR Engine</label>
-            <select id="node-input-ocrEngine" class="input-width-70">
-                <option value="auto">Auto</option>
-                <option value="easyocr">EasyOCR</option>
-                <option value="tesseract">Tesseract</option>
-                <option value="rapidocr">RapidOCR</option>
-                <option value="ocrmac">OCR Mac</option>
-                <option value="suryaocr">SuryaOCR</option>
-            </select>
-        </div>
-
-        <div class="form-row row-ocr-options">
-            <label for="node-input-ocrLang">
-                <i class="fa fa-language"></i>
-                OCR Lang
-            </label>
-            <select id="node-input-ocrLang" class="input-width-70">
-                <option value="">Default (Auto)</option>
-                <option value="en">English (en)</option>
-                <option value="de">German (de)</option>
-                <option value="fr">French (fr)</option>
-                <option value="es">Spanish (es)</option>
-                <option value="it">Italian (it)</option>
-                <option value="pt">Portuguese (pt)</option>
-                <option value="nl">Dutch (nl)</option>
-                <option value="ru">Russian (ru)</option>
-                <option value="zh">Chinese (zh)</option>
-                <option value="ja">Japanese (ja)</option>
-                <option value="ko">Korean (ko)</option>
-                <option value="ar">Arabic (ar)</option>
-                <option value="hi">Hindi (hi)</option>
-                <option value="tr">Turkish (tr)</option>
-                <option value="pl">Polish (pl)</option>
-            </select>
-        </div>
-    </fieldset>
-
-    <fieldset class="node-red-fieldset form-row-static">
-        <legend>
-            <i class="fa fa-magic"></i>
-            Extraction & Enrichments
-        </legend>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-tables" />
-            <label for="node-input-tables">
-                <i class="fa fa-table"></i>
-                Extract Tables
-            </label>
-        </div>
-
-        <div class="form-row" id="row-tableMode">
-            <label for="node-input-tableMode" style="padding-left: 25px;">Table Mode</label>
-            <select id="node-input-tableMode" style="width: calc(70% - 25px)">
-                <option value="accurate">Accurate</option>
-                <option value="fast">Fast</option>
-            </select>
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-enrichChartExtraction" />
-            <label for="node-input-enrichChartExtraction">
-                <i class="fa fa-bar-chart"></i>
-                Extract Chart Data
-            </label>
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-enrichCode" />
-            <label for="node-input-enrichCode">
-                <i class="fa fa-code"></i>
-                Enrich Code
-            </label>
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-enrichFormula" />
-            <label for="node-input-enrichFormula">
-                <i class="fa fa-superscript"></i>
-                Enrich Formula
-            </label>
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-enrichPictureClasses" />
-            <label for="node-input-enrichPictureClasses">
-                <i class="fa fa-picture-o"></i>
-                Picture Classes
-            </label>
-        </div>
-    </fieldset>
-
-    <fieldset class="node-red-fieldset form-row-static">
-        <legend>
-            <i class="fa fa-cogs"></i>
-            Advanced Pipeline
-        </legend>
-
-        <div class="form-row">
-            <label for="node-input-device">Device</label>
-            <select id="node-input-device" class="input-width-70">
-                <option value="auto">Auto</option>
-                <option value="cpu">CPU</option>
-                <option value="cuda">CUDA</option>
-                <option value="mps">MPS</option>
-                <option value="xpu">XPU</option>
-            </select>
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-pdfBackend">PDF Backend</label>
-            <select id="node-input-pdfBackend" class="input-width-70">
-                <option value="docling_parse">Docling Parse</option>
-                <option value="threaded_docling_parse">Threaded Docling Parse</option>
-                <option value="pypdfium2">PyPDFium2</option>
-                <option value="dlparse_v1">DLParse V1</option>
-                <option value="dlparse_v2">DLParse V2</option>
-                <option value="dlparse_v4">DLParse V4</option>
-            </select>
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-pipeline">Pipeline</label>
-            <select id="node-input-pipeline" class="input-width-70">
-                <option value="">Standard (Default)</option>
-                <option value="vlm">VLM</option>
-            </select>
-        </div>
-
-        <div class="form-row" id="row-vlmModel">
-            <label for="node-input-vlmModel">VLM Model</label>
-            <select id="node-input-vlmModel" class="input-width-70">
-                <option value="smoldocling">smoldocling</option>
-                <option value="granite_docling">granite_docling</option>
-                <option value="deepseek_ocr">deepseek_ocr</option>
-                <option value="granite_vision">granite_vision</option>
-                <option value="pixtral">pixtral</option>
-                <option value="got_ocr">got_ocr</option>
-                <option value="phi4">phi4</option>
-                <option value="qwen">qwen</option>
-                <option value="nanonets_ocr2">nanonets_ocr2</option>
-                <option value="gemma_12b">gemma_12b</option>
-                <option value="gemma_27b">gemma_27b</option>
-                <option value="dolphin">dolphin</option>
-                <option value="glm_ocr">glm_ocr</option>
-                <option value="lightonocr">lightonocr</option>
-                <option value="falcon_ocr">falcon_ocr</option>
-            </select>
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-artifactsPath">Artifacts Path</label>
-            <input
-                type="text"
-                id="node-input-artifactsPath"
-                class="input-width-70"
-                placeholder="Local models path"
-            />
-        </div>
-
-        <div class="form-row">
-            <label for="node-input-documentTimeout">Timeout (s)</label>
-            <input
-                type="number"
-                id="node-input-documentTimeout"
-                class="input-width-70"
-                placeholder="Timeout in seconds"
-            />
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-profiling" />
-            <label for="node-input-profiling">Enable Profiling</label>
-        </div>
-
-        <div class="form-row flex-checkbox-row" id="row-saveProfiling">
-            <input
-                type="checkbox"
-                id="node-input-saveProfiling"
-                style="margin-left: 25px !important;"
-            />
-            <label for="node-input-saveProfiling">Save Profiling (to JSON)</label>
-        </div>
-
-        <div class="form-row flex-checkbox-row">
-            <input type="checkbox" id="node-input-abortOnError" />
-            <label for="node-input-abortOnError">Abort on Error</label>
-        </div>
-    </fieldset>
 </script>
 
 <!-- @formatter:off -->

@@ -38,3 +38,63 @@ describe('docling editor', function () {
         });
     }
 });
+
+// Every editor input of docling.html at 2.4b (b9ffb1f); the shared styling keeps them all.
+const INPUT_IDS = [
+    'name',
+    'dynamic',
+    'fromFormat',
+    'source',
+    'sourceType',
+    'toFormat',
+    'output',
+    'outputType',
+    'imageExportMode',
+    'ocr',
+    'forceOcr',
+    'ocrEngine',
+    'ocrLang',
+    'tables',
+    'tableMode',
+    'enrichChartExtraction',
+    'enrichCode',
+    'enrichFormula',
+    'enrichPictureClasses',
+    'device',
+    'pdfBackend',
+    'pipeline',
+    'vlmModel',
+    'artifactsPath',
+    'documentTimeout',
+    'profiling',
+    'saveProfiling',
+    'abortOnError',
+].map((id) => `node-input-${id}`);
+
+describe('docling editor styling', function () {
+    const html = fs.readFileSync(path.join(__dirname, '../src/docling.html'), 'utf8');
+    const template = html.match(
+        /<script type="text\/html" data-template-name="docling">([\s\S]*?)<\/script>/,
+    )[1];
+
+    it('uses the shared editor.css', function () {
+        assert.match(html, /href="resources\/@faigle\/node-red-runtime-utils\/editor\.css"/);
+    });
+
+    it('wraps the whole template in .faigle-node-editor', function () {
+        assert.match(template.trim(), /^<div class="faigle-node-editor">[\s\S]*<\/div>$/);
+    });
+
+    it('has no inline style block', function () {
+        assert.doesNotMatch(html, /<style/);
+    });
+
+    it('has no input-width-70 class', function () {
+        assert.doesNotMatch(html, /input-width-70/);
+    });
+
+    it('keeps every editor input', function () {
+        const ids = [...template.matchAll(/id="(node-input-[A-Za-z]+)"/g)].map(([, id]) => id);
+        assert.deepEqual(ids, INPUT_IDS);
+    });
+});
